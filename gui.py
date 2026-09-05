@@ -1,6 +1,6 @@
 import FreeSimpleGUI as sg
 
-import actions
+import actions  # noqa: F401
 
 label = sg.Text("Enter a task:")
 input_box = sg.InputText(tooltip="Type your task here")

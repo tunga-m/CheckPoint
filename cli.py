@@ -4,6 +4,7 @@ import actions
 
 
 def menu():
+    """Display the menu and handle user input"""
     current_time = time.strftime("%b %d, %Y %H:%M:%S")
     print("Current date and time: " + current_time)
 

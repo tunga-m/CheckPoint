@@ -3,7 +3,10 @@ import file_manager
 
 def add_todo(user_input):
     """Add an item to the todo_list"""
-    todo = user_input[4:]
+    todo = user_input[4:].strip()
+
+    if not todo:
+        raise ValueError("Todo item cannot be empty.")
 
     todo_list = file_manager.get_todo_list()
     todo_list.append(todo + "\n")
@@ -13,8 +16,10 @@ def add_todo(user_input):
 
 def edit_todo(user_input):
     """edit an item from the todo_list"""
-    item_index = int(user_input[5:])
-    item_index -= 1
+    item_index = get_todo_index(user_input)
+
+    if item_index < 1: # check for negative index
+        raise IndexError
 
     todo_list = file_manager.get_todo_list()
 
@@ -27,8 +32,10 @@ def edit_todo(user_input):
 
 def complete_todo(user_input):
     """Complete an item from the todo_list and remove it from the todo_list"""
-    todo_completed = int(user_input[9:])
-    todo_completed -= 1
+    todo_completed = get_todo_index(user_input)
+
+    if todo_completed < 1: # check for negative index
+        raise IndexError
 
     todo_list = file_manager.get_todo_list()
 
@@ -48,6 +55,7 @@ def show_todo_list():
         print(f"{index + 1} - {todo.strip('\n')}.")
 
 
-def exit_action():
-    """Lets user know the application is closing"""
-    print("Goodbye!")
+def get_todo_index(user_input):
+    """Get the index of a todo item from the user input"""
+    index = int(user_input.split()[1])
+    return index - 1  # Convert to zero-based index

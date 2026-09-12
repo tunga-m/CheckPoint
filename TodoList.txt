@@ -1,3 +1,6 @@
 add a new player
 pick up the trash
-dont do the laundrytest2
+play games
+test
+test2
+clean the chair

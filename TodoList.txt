@@ -1,6 +1,7 @@
 add a new player
 pick up the trash
 play games
-test
-test2
+not a test
+go shopping
 clean the chair
+go shopping

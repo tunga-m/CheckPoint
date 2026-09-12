@@ -1,3 +1,5 @@
+import os
+
 import FreeSimpleGUI as sg
 
 import file_manager
@@ -5,6 +7,10 @@ import file_manager
 APP_TITLE = "CheckPoint"
 WINDOW_FONT = ("Helvetica", 15)
 LIST_SIZE = (44, 10)
+
+if not os.path.exists(file_manager.FILEPATH):
+    with open(file_manager.FILEPATH, "w") as file_local:
+        file_local.write("")  # Create an empty file if it doesn't exist
 
 sg.theme("SystemDefaultForReal")
 

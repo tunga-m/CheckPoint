@@ -1,4 +1,28 @@
-/.venv/
-.idea
+# Python cache
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# PyInstaller
+build/
+dist/
+*.exe
+
+# IDE files
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.bak

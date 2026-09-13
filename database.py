@@ -1,0 +1,126 @@
+import sqlite3
+
+
+def get_connection():
+    """Establish a connection to the SQLite database."""
+    connection = sqlite3.connect("checkpoint.db")
+    connection.row_factory = sqlite3.Row  # Enable named column access
+    return connection
+
+
+def initialize_database():
+    """Create the tasks table if it doesn't exist."""
+    connection = get_connection()
+
+    connection.execute(
+        """
+        CREATE TABLE IF NOT EXISTS tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            title TEXT NOT NULL
+                CHECK(length(trim(title)) > 0),
+
+            description TEXT,
+
+            status TEXT NOT NULL DEFAULT 'active'
+                CHECK(status IN ('active', 'completed')),
+
+            priority TEXT NOT NULL DEFAULT 'medium'
+                CHECK(priority IN ('low', 'medium', 'high')),
+
+            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+            due_at TEXT,
+
+            completed_at TEXT
+        )
+        """
+    )
+
+    connection.close()
+
+
+def add_task(title, description=None, priority="medium", due_at=None):
+    """Add a new task to the database."""
+    connection = get_connection()
+
+    cursor = connection.execute(
+        """
+        INSERT INTO tasks (
+            title,
+            description,
+            priority,
+            due_at
+        )
+        VALUES (?, ?, ?, ?)
+        """,
+        (title, description, priority, due_at)
+    )
+
+    connection.commit()
+
+    task_id = cursor.lastrowid
+
+    connection.close()
+
+    return task_id
+
+
+def get_tasks():
+    """Retrieve all tasks from the database."""
+    connection = get_connection()
+
+    rows = connection.execute(
+        """
+        SELECT
+            id,
+            title,
+            description,
+            status,
+            priority,
+            created_at,
+            due_at,
+            completed_at
+        FROM tasks
+        """
+    ).fetchall()
+
+    connection.close()
+
+    return rows
+
+
+def update_task(task_id, new_title):
+    """Update the title of a task by its ID."""
+    connection = get_connection()
+
+    connection.execute(
+        """
+        UPDATE tasks
+        SET title = ?
+        WHERE id = ?
+        """,
+        (new_title, task_id)
+    )
+
+    connection.commit()
+    connection.close()
+
+
+def complete_task(task_id):
+    """Mark a task as completed without deleting it."""
+    connection = get_connection()
+
+    connection.execute(
+        """
+        UPDATE tasks
+        SET
+            status = 'completed',
+            completed_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (task_id,)
+    )
+
+    connection.commit()
+    connection.close()

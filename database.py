@@ -1,9 +1,12 @@
 import sqlite3
+from pathlib import Path
+
+DATABASE_PATH = Path(__file__).resolve().parent / "checkpoint.db"
 
 
 def get_connection():
     """Establish a connection to the SQLite database."""
-    connection = sqlite3.connect("checkpoint.db")
+    connection = sqlite3.connect(DATABASE_PATH)
     connection.row_factory = sqlite3.Row  # Enable named column access
     return connection
 

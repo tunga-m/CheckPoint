@@ -1,4 +1,3 @@
-from multiprocessing.dummy import connection
 import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
@@ -20,10 +19,14 @@ def database_connection():
 
     try:
         yield connection
-        connection.commit()
+
+        if connection.in_transaction:
+            connection.commit()
 
     except Exception:
-        connection.rollback()
+        if connection.in_transaction:
+            connection.rollback()
+
         raise
 
     finally:
@@ -32,12 +35,11 @@ def database_connection():
 
 def initialize_database():
     """Create the tasks table if it doesn't exist."""
-    connection = get_connection()
-
-    connection.execute(
-        """
-        CREATE TABLE IF NOT EXISTS tasks (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+    with database_connection() as connection:
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS tasks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
 
             title TEXT NOT NULL
                 CHECK(length(trim(title)) > 0),
@@ -58,8 +60,6 @@ def initialize_database():
         )
         """
     )
-
-    connection.close()
 
 
 def add_task(title, description=None, priority="medium", due_at=None):
@@ -83,26 +83,23 @@ def add_task(title, description=None, priority="medium", due_at=None):
 
 def get_tasks():
     """Retrieve all tasks from the database."""
-    connection = get_connection()
+    with database_connection() as connection:
+        rows = connection.execute(
+            """
+            SELECT
+                id,
+                title,
+                description,
+                status,
+                priority,
+                created_at,
+                due_at,
+                completed_at
+            FROM tasks
+            """
+        ).fetchall()
 
-    rows = connection.execute(
-        """
-        SELECT
-            id,
-            title,
-            description,
-            status,
-            priority,
-            created_at,
-            due_at,
-            completed_at
-        FROM tasks
-        """
-    ).fetchall()
-
-    connection.close()
-
-    return rows
+        return rows
 
 
 def update_task(task_id, title, description=None, priority="medium", due_at=None):
@@ -129,8 +126,8 @@ def complete_task(task_id):
             """
             UPDATE tasks
             SET
-            status = 'completed',
-            completed_at = CURRENT_TIMESTAMP
+                status = 'completed',
+                completed_at = CURRENT_TIMESTAMP
         WHERE id = ?
         """,
         (task_id,)
@@ -139,26 +136,23 @@ def complete_task(task_id):
 
 def get_tasks_by_status(status):
     """Retrieve tasks matching a specific status."""
-    connection = get_connection()
-
-    rows = connection.execute(
-        """
-        SELECT
-            id,
-            title,
-            description,
-            status,
-            priority,
-            created_at,
-            due_at,
-            completed_at
+    with database_connection() as connection:
+        rows = connection.execute(
+            """
+            SELECT
+                id,
+                title,
+                description,
+                status,
+                priority,
+                created_at,
+                due_at,
+                completed_at
         FROM tasks
         WHERE status = ?
         """,
         (status,)
     ).fetchall()
-
-    connection.close()
 
     return rows
 
@@ -175,28 +169,25 @@ def get_completed_tasks():
 
 def get_task_by_id(task_id):
     """Retrieve a single task by its unique ID."""
-    connection = get_connection()
+    with database_connection() as connection:
+        row = connection.execute(
+            """
+            SELECT
+                id,
+                title,
+                description,
+                status,
+                priority,
+                created_at,
+                due_at,
+                completed_at
+            FROM tasks
+            WHERE id = ?
+            """,
+            (task_id,)
+        ).fetchone()
 
-    row = connection.execute(
-        """
-        SELECT
-            id,
-            title,
-            description,
-            status,
-            priority,
-            created_at,
-            due_at,
-            completed_at
-        FROM tasks
-        WHERE id = ?
-        """,
-        (task_id,)
-    ).fetchone()
-
-    connection.close()
-
-    return row
+        return row
 
 
 def reopen_task(task_id):

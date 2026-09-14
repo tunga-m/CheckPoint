@@ -53,22 +53,22 @@ def initialize_database():
             CREATE TABLE IF NOT EXISTS tasks (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
 
-            title TEXT NOT NULL
-                CHECK(length(trim(title)) > 0),
+                title TEXT NOT NULL
+                    CHECK(length(trim(title)) > 0),
 
-            description TEXT,
+                description TEXT,
 
-            status TEXT NOT NULL DEFAULT 'active'
-                CHECK(status IN ('active', 'completed')),
+                status TEXT NOT NULL DEFAULT 'active'
+                    CHECK(status IN ('active', 'completed')),
 
-            priority TEXT NOT NULL DEFAULT 'medium'
-                CHECK(priority IN ('low', 'medium', 'high')),
+                priority TEXT NOT NULL DEFAULT 'medium'
+                    CHECK(priority IN ('low', 'medium', 'high')),
 
-            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-            due_at TEXT,
+                due_at TEXT,
 
-            completed_at TEXT
+                completed_at TEXT
         )
         """
     )
@@ -132,7 +132,7 @@ def complete_task(task_id):
             SET
                 status = 'completed',
                 completed_at = CURRENT_TIMESTAMP
-        WHERE id = ?
+            WHERE id = ?
         """,
         (task_id,)
     )
@@ -155,12 +155,12 @@ def get_tasks_by_status(status):
 
 def get_active_tasks():
     """Retrieve only active tasks from the database."""
-    return get_tasks_by_status('active')
+    return get_tasks_by_status("active")
 
 
 def get_completed_tasks():
     """Retrieve only completed tasks from the database."""
-    return get_tasks_by_status('completed')
+    return get_tasks_by_status("completed")
 
 
 def get_task_by_id(task_id):

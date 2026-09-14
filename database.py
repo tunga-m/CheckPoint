@@ -124,3 +124,39 @@ def complete_task(task_id):
 
     connection.commit()
     connection.close()
+
+
+def get_tasks_by_status(status):
+    """Retrieve tasks matching a specific status."""
+    connection = get_connection()
+
+    rows = connection.execute(
+        """
+        SELECT
+            id,
+            title,
+            description,
+            status,
+            priority,
+            created_at,
+            due_at,
+            completed_at
+        FROM tasks
+        WHERE status = ?
+        """,
+        (status,)
+    ).fetchall()
+
+    connection.close()
+
+    return rows
+
+
+def get_active_tasks():
+    """Retrieve only active tasks from the database."""
+    return get_tasks_by_status('active')
+
+
+def get_completed_tasks():
+    """Retrieve only completed tasks from the database."""
+    return get_tasks_by_status('completed')

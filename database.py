@@ -1,4 +1,6 @@
+from multiprocessing.dummy import connection
 import sqlite3
+from contextlib import contextmanager
 from pathlib import Path
 
 DATABASE_PATH = Path(__file__).resolve().parent / "checkpoint.db"
@@ -9,6 +11,23 @@ def get_connection():
     connection = sqlite3.connect(DATABASE_PATH)
     connection.row_factory = sqlite3.Row  # Enable named column access
     return connection
+
+
+@contextmanager
+def database_connection():
+    """Provide a database connection with automatic transaction handling."""
+    connection = get_connection()
+
+    try:
+        yield connection
+        connection.commit()
+
+    except Exception:
+        connection.rollback()
+        raise
+
+    finally:
+        connection.close()
 
 
 def initialize_database():
@@ -45,28 +64,21 @@ def initialize_database():
 
 def add_task(title, description=None, priority="medium", due_at=None):
     """Add a new task to the database."""
-    connection = get_connection()
-
-    cursor = connection.execute(
-        """
-        INSERT INTO tasks (
-            title,
-            description,
-            priority,
-            due_at
+    with database_connection() as connection:
+        cursor = connection.execute(
+            """
+            INSERT INTO tasks (
+                title,
+                description,
+                priority,
+                due_at
+            )
+            VALUES (?, ?, ?, ?)
+            """,
+            (title, description, priority, due_at)
         )
-        VALUES (?, ?, ?, ?)
-        """,
-        (title, description, priority, due_at)
-    )
 
-    connection.commit()
-
-    task_id = cursor.lastrowid
-
-    connection.close()
-
-    return task_id
+        return cursor.lastrowid
 
 
 def get_tasks():
@@ -95,42 +107,34 @@ def get_tasks():
 
 def update_task(task_id, title, description=None, priority="medium", due_at=None):
     """Update the editable fields of a task by its ID."""
-    connection = get_connection()
-
-    connection.execute(
-        """
-        UPDATE tasks
-        SET 
-            title = ?,
-            description = ?,
-            priority = ?,
-            due_at = ?
-        WHERE id = ?
-        """,
-        (title, description, priority, due_at, task_id)
-    )
-
-    connection.commit()
-    connection.close()
+    with database_connection() as connection:
+        connection.execute(
+            """
+            UPDATE tasks
+            SET 
+                title = ?,
+                description = ?,
+                priority = ?,
+                due_at = ?
+            WHERE id = ?
+            """,
+            (title, description, priority, due_at, task_id)
+        )
 
 
 def complete_task(task_id):
     """Mark a task as completed without deleting it."""
-    connection = get_connection()
-
-    connection.execute(
-        """
-        UPDATE tasks
-        SET
+    with database_connection() as connection:
+        connection.execute(
+            """
+            UPDATE tasks
+            SET
             status = 'completed',
             completed_at = CURRENT_TIMESTAMP
         WHERE id = ?
         """,
         (task_id,)
     )
-
-    connection.commit()
-    connection.close()
 
 
 def get_tasks_by_status(status):
@@ -197,34 +201,26 @@ def get_task_by_id(task_id):
 
 def reopen_task(task_id):
     """Reopen a completed task and clear its completion timestamp."""
-    connection = get_connection()
-
-    connection.execute(
-        """
-        UPDATE tasks
-        SET
-            status = 'active',
-            completed_at = NULL
-        WHERE id = ?
-        """,
-        (task_id,)
-    )
-
-    connection.commit()
-    connection.close()
+    with database_connection() as connection:
+        connection.execute(
+            """
+            UPDATE tasks
+            SET
+                status = 'active',
+                completed_at = NULL
+            WHERE id = ?
+            """,
+            (task_id,)
+        )
 
 
 def delete_task(task_id):
     """Permanently delete a task by its ID."""
-    connection = get_connection()
-
-    connection.execute(
-        """
-        DELETE FROM tasks
-        WHERE id = ?
-        """,
-        (task_id,)
-    )
-
-    connection.commit()
-    connection.close()
+    with database_connection() as connection:
+        connection.execute(
+            """
+            DELETE FROM tasks
+            WHERE id = ?
+            """,
+            (task_id,)
+        )

@@ -190,3 +190,22 @@ def get_task_by_id(task_id):
     connection.close()
 
     return row
+
+
+def reopen_task(task_id):
+    """Reopen a completed task and clear its completion timestamp."""
+    connection = get_connection()
+
+    connection.execute(
+        """
+        UPDATE tasks
+        SET
+            status = 'active',
+            completed_at = NULL
+        WHERE id = ?
+        """,
+        (task_id,)
+    )
+
+    connection.commit()
+    connection.close()

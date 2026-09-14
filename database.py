@@ -160,3 +160,29 @@ def get_active_tasks():
 def get_completed_tasks():
     """Retrieve only completed tasks from the database."""
     return get_tasks_by_status('completed')
+
+
+def get_task_by_id(task_id):
+    """Retrieve a single task by its unique ID."""
+    connection = get_connection()
+
+    row = connection.execute(
+        """
+        SELECT
+            id,
+            title,
+            description,
+            status,
+            priority,
+            created_at,
+            due_at,
+            completed_at
+        FROM tasks
+        WHERE id = ?
+        """,
+        (task_id,)
+    ).fetchone()
+
+    connection.close()
+
+    return row

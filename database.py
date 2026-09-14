@@ -209,3 +209,19 @@ def reopen_task(task_id):
 
     connection.commit()
     connection.close()
+
+
+def delete_task(task_id):
+    """Permanently delete a task by its ID."""
+    connection = get_connection()
+
+    connection.execute(
+        """
+        DELETE FROM tasks
+        WHERE id = ?
+        """,
+        (task_id,)
+    )
+
+    connection.commit()
+    connection.close()

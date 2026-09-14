@@ -4,6 +4,18 @@ from pathlib import Path
 
 DATABASE_PATH = Path(__file__).resolve().parent / "checkpoint.db"
 
+TASK_COLUMNS = (
+    "id",
+    "title",
+    "description",
+    "status",
+    "priority",
+    "created_at",
+    "due_at",
+    "completed_at"
+)
+TASK_COLUMNS_SQL = ", ".join(TASK_COLUMNS)
+
 
 def get_connection():
     """Establish a connection to the SQLite database."""
@@ -85,16 +97,8 @@ def get_tasks():
     """Retrieve all tasks from the database."""
     with database_connection() as connection:
         rows = connection.execute(
-            """
-            SELECT
-                id,
-                title,
-                description,
-                status,
-                priority,
-                created_at,
-                due_at,
-                completed_at
+            f"""
+            SELECT {TASK_COLUMNS_SQL}
             FROM tasks
             """
         ).fetchall()
@@ -138,23 +142,15 @@ def get_tasks_by_status(status):
     """Retrieve tasks matching a specific status."""
     with database_connection() as connection:
         rows = connection.execute(
-            """
-            SELECT
-                id,
-                title,
-                description,
-                status,
-                priority,
-                created_at,
-                due_at,
-                completed_at
-        FROM tasks
-        WHERE status = ?
-        """,
-        (status,)
-    ).fetchall()
+            f"""
+            SELECT {TASK_COLUMNS_SQL}
+            FROM tasks
+            WHERE status = ?
+            """,
+            (status,)
+        ).fetchall()
 
-    return rows
+        return rows
 
 
 def get_active_tasks():
@@ -171,16 +167,8 @@ def get_task_by_id(task_id):
     """Retrieve a single task by its unique ID."""
     with database_connection() as connection:
         row = connection.execute(
-            """
-            SELECT
-                id,
-                title,
-                description,
-                status,
-                priority,
-                created_at,
-                due_at,
-                completed_at
+            f"""
+            SELECT {TASK_COLUMNS_SQL}
             FROM tasks
             WHERE id = ?
             """,

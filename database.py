@@ -90,17 +90,21 @@ def get_tasks():
     return rows
 
 
-def update_task(task_id, new_title):
-    """Update the title of a task by its ID."""
+def update_task(task_id, title, description=None, priority="medium", due_at=None):
+    """Update the editable fields of a task by its ID."""
     connection = get_connection()
 
     connection.execute(
         """
         UPDATE tasks
-        SET title = ?
+        SET 
+            title = ?,
+            description = ?,
+            priority = ?,
+            due_at = ?
         WHERE id = ?
         """,
-        (new_title, task_id)
+        (title, description, priority, due_at, task_id)
     )
 
     connection.commit()
